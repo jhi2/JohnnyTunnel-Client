@@ -1,7 +1,7 @@
 name: build-and-release
 
 on:
-  workflow_dispatch:   # 👈 THIS adds the "Run workflow" button in GitHub UI
+  workflow_dispatch:
     inputs:
       tag:
         description: "Release tag (e.g. v1.0.0)"
@@ -24,9 +24,9 @@ jobs:
         run: |
           uv sync
           uv add pyinstaller
-          uv run pyinstaller --onefile main.py
+          uv run pyinstaller --onefile main.py --name tnl
           mkdir -p release
-          mv dist/main release/tnl
+          mv dist/tnl release/tnl
 
       - name: Upload linux artifact
         uses: actions/upload-artifact@v4
@@ -51,9 +51,10 @@ jobs:
         run: |
           uv sync
           uv add pyinstaller
-          uv run pyinstaller --onefile main.py
-          New-Item -ItemType Directory -Force release
-          Rename-Item dist\main.exe release\tnl.exe
+          uv run pyinstaller --onefile main.py --name tnl
+
+          New-Item -ItemType Directory -Force release | Out-Null
+          Copy-Item dist\tnl.exe release\tnl.exe
 
       - name: Upload windows artifact
         uses: actions/upload-artifact@v4
