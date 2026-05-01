@@ -1,0 +1,83 @@
+name: build-and-release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          curl -Ls https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Setup env
+        run: |
+          uv sync
+          uv add pyinstaller
+
+      - name: Build binary
+        run: |
+          uv run pyinstaller --onefile main.py
+          mkdir -p release
+          mv dist/main release/tnl
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: release/tnl
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        shell: pwsh
+        run: |
+          irm https://astral.sh/uv/install.ps1 | iex
+          echo "$env:USERPROFILE\.cargo\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
+
+      - name: Setup env
+        shell: pwsh
+        run: |
+          uv sync
+          uv add pyinstaller
+
+      - name: Build binary
+        shell: pwsh
+        run: |
+          uv run pyinstaller --onefile main.py
+          New-Item -ItemType Directory -Force release
+          Rename-Item dist\main.exe release\tnl.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: release/tnl.exe
+
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: |
+            linux/tnl
+            windows/tnl.exe
