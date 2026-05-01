@@ -1,9 +1,8 @@
 name: build-and-release
 
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
 
 jobs:
   build-linux:
@@ -17,13 +16,10 @@ jobs:
           curl -Ls https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Setup env
+      - name: Build
         run: |
           uv sync
           uv add pyinstaller
-
-      - name: Build binary
-        run: |
           uv run pyinstaller --onefile main.py
           mkdir -p release
           mv dist/main release/tnl
@@ -46,15 +42,11 @@ jobs:
           irm https://astral.sh/uv/install.ps1 | iex
           echo "$env:USERPROFILE\.cargo\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
 
-      - name: Setup env
+      - name: Build
         shell: pwsh
         run: |
           uv sync
           uv add pyinstaller
-
-      - name: Build binary
-        shell: pwsh
-        run: |
           uv run pyinstaller --onefile main.py
           New-Item -ItemType Directory -Force release
           Rename-Item dist\main.exe release\tnl.exe
@@ -70,14 +62,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
 
-      - name: Create Release
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
           files: |
             linux/tnl
             windows/tnl.exe
