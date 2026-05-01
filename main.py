@@ -42,8 +42,8 @@ async def run_tunnel(subdomain: str, port: int, server: str):
                         body = data.get("body", "")
                         headers = data.get("headers", {})
 
-                        # Fix host header safely
-                        headers["host"] = f"localhost:{port}"
+                        # Preserve original Host header - don't override it
+                        # The local server may use Host for virtual hosting/routing
 
                         try:
                             url = f"http://localhost:{port}/{path.lstrip('/')}" if path else f"http://localhost:{port}/"
