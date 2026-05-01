@@ -22,6 +22,7 @@ async def run_tunnel(subdomain: str, port: int, server: str):
     print(f"Tunnel target: {server}")
     print(f"Public URL: https://{subdomain}.{server.replace('wss://', '').replace('ws://', '')}")
     print(f"Forwarding → localhost:{port}")
+    print(f"If you want to use a CNAME record to forward to the tunnel, the ONLY SUITABLE METHOD is: [CNAME]https://{subdomain}.[YOURDOMAIN.com] points to https://{subdomain}.{server.replace('wss://', '').replace('ws://', '')}")
     print("Ctrl+C to stop\n")
 
     async with httpx.AsyncClient(follow_redirects=False, timeout=None) as http:
